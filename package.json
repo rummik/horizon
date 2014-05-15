@@ -9,19 +9,18 @@
 		"accounting": "*",
 		"bcrypt": "*",
 		"browserify": "*",
-		"connect-flash": "*",
-		"connect-mongodb": "*",
-		"ejs": "*",
+		"consolidate": "*",
 		"express": "3.0.x",
-		"express-partials": "*",
+		"express-chromeframe": "*",
+		"express-cf-geoip": "*",
+		"es5-shim": "*",
 		"jquery-browserify": "*",
-		"mongoose": "*",
-		"passport": "*",
-		"passport-local": "*",
-		"stylus": "*"
+		"nib": "*",
+		"stylus": "*",
+		"swig": "*"
 	},
 	"engines": {
 		"node": "0.8.x",
-		"npm": "1.1.x"
+		"npm": "1.x"
 	}
 }

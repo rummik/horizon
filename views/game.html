@@ -1,0 +1,37 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="map">
+	<div id=map>
+		<img src="/world.svg">
+		{% for region in player.regions %}
+			<div class="region {{ loop.key }}">
+				<button data-region={{ loop.key }}>
+					{{ region }}
+					{% if player.systems[region].length %}
+						({{ player.systems[region].length }})
+					{% endif %}
+				</button>
+			</div>
+		{% endfor %}
+	</div>
+</div>
+
+<div class="clock" id=clock>
+	<span class="display clock" data-scale="{{ player.scale }}" data-timestamp="{{ player.now }}"></span>
+	<input id=tscale type=range min={{ player.minScale }} max={{ player.maxScale }} step=1 value={{ player.scale }}>
+	<span class="display flow">{{ player.scale }}<sup>3</sup>x</span>
+</div>
+
+<div class="finance">
+	{{ player.currency }}{{ player.balance }}
+</div>
+
+<div class="stats">
+	<table>
+		<tr><td>Systems:</td> <td class="systems">{{ player.systems.count }}</td></tr>
+		<tr><td>MIPS:</td> <td class="mips">{{ player.mips }}</td></tr>
+	</table>
+</div>
+
+<div class="research"></div>
+{% endblock %}

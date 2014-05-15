@@ -36,6 +36,7 @@ function ProcessTree(options) {
 }
 
 ProcessTree.prototype = [];
+ProcessTree.prototype.constructor = ProcessTree;
 
 ProcessTree.prototype.add = function(options) {
 	options = options || {};

@@ -1,11 +1,9 @@
-console.log('test');
 var $          = require('jquery-browserify'),
     accounting = require('accounting'),
     Player     = require('./player');
 
+require('es5-shim');
 require('./effects');
-
-	console.log(Player);
 
 $(function() {
 	"use strict";
@@ -78,7 +76,7 @@ $(function() {
 		$('.stats .mips').text(player.mips);
 	});
 
-	$(window).load(function() {
+	$(window).on('load', function() {
 		setTimeout($.fn.bloom.bind($('#content > div'), { opacity: 1 }, true, function() {
 			if (!location.hash.length || !$('.login form'))
 				return;

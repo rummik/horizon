@@ -1,29 +1,68 @@
-var express    = require('express'),
-    partials   = require('express-partials'),
-    browserify = require('browserify'),
-    http       = require('http'),
-    path       = require('path'),
-    fs         = require('fs'),
-    options    = require('./options'),
-    app        = express();
+var express     = require('express'),
+
+    app         = express(),
+    server      = require('http').createServer(app),
+
+    cons        = require('consolidate'),
+    swig        = require('swig'),
+
+    browserify  = require('browserify'),
+    chromeframe = require('express-chromeframe'),
+    geoip       = require('express-cf-geoip'),
+
+    stylus      = require('stylus'),
+    nib         = require('nib'),
+
+    net         = require('net'),
+    fs          = require('fs'),
+
+    config      = JSON.parse(fs.readFileSync(__dirname + '/config.json'));
+
+app.set('port', process.env.PORT || 3000);
 
 app.configure(function() {
-	app.set('port', process.env.PORT || 3000);
-	app.set('views', __dirname + '/views');
-	app.set('view engine', 'ejs');
+	app.engine('.html', cons.swig);
+	app.set('view engine', 'html');
+
+	swig.init({
+		root: app.get('views'),
+		allowErrors: true,
+		cache: false
+	});
+
+	app.use(chromeframe());
 	app.use(express.favicon(__dirname + '/public/favicon.ico'));
-	app.use(express.logger('dev'));
-	app.use(express.bodyParser());
-	app.use(express.methodOverride());
-	app.use(express.cookieParser(options.cookieSecret));
-	app.use(express.session({ secret: options.sessionSecret }));
+	app.use(express.cookieParser(config.cookieSecret));
+	app.use(express.session({ secret: config.sessionSecret }));
+
+	app.use(
+		browserify({
+			watch: true,
+			require: {
+				jquery: 'jquery-browserify'
+			}
+		})
+		.addEntry(__dirname + '/scripts/index.js')
+	);
+
+	app.use(stylus.middleware({
+		src:  __dirname + '/styles',
+		dest: __dirname + '/public/assets',
+		compile: function(str, path) {
+			return stylus(str)
+				.set('filename', path)
+				.set('compress', false)
+				//.set('linenos', true)
+				.use(nib());
+		}
+	}));
+
 	app.use(function(req, res, next) { req.realip = req.header('cf-connecting-ip') || req.ip; next(); });
-	app.use(function(req, res, next) { req.geoip = geoip(req.header('cf-ipcountry')); next(); });
-	app.use(partials());
+	app.use(geoip.middleware('gb'));
+
 	app.use(app.router);
-	app.use(browserify(__dirname + '/scripts/index.js'));
-	app.use(require('stylus').middleware({ src: __dirname + '/styles', dest: __dirname + '/public' }));
-	app.use(express.static(path.join(__dirname, 'public')));
+
+	app.use(express.static(__dirname + '/public/assets'));
 });
 
 app.configure('development', function(){
@@ -46,11 +85,6 @@ fs.readdirSync(__dirname + '/routes').forEach(function(file) {
 	});
 });
 
-http.createServer(app).listen(app.get('port'), function() {
-	console.log('Express server listening on port ' + app.get('port'));
+server.listen(app.get('port'), function() {
+	console.log('Server listening on port', app.get('port'));
 });
-
-function geoip(cc) {
-	cc=cc||'us';var c=':af ao bfijw cdfgimv djz eghrt gahmnqw kem lrsy maglruwz naeg rew scdhlnostz tdgnz ug yt zamw:an aq bv gs hm tf:as aefmz bdhnt ccnxy ge hk idlnoqr jop kghprwz labk mmnovy np om phks qa ru sagy thjlmrw uz vn xdes ye:eu adlmtxz baegy chyz dek ees fior gbegir hru iemst je kz lituv mcdekt nlo plt rosu seijkm tr ua va:na aginw bblmqsz caruw dmo gdlpt hnt jm kny lc mfqsx ni pamr svx tct ums vcgi:oc asu ck fjm gu ki mhp ncfruz pfgnw sb tkov um vu wfs xx:sa ar bor clo ec fk gfy pey sr uy ve:'.match(new RegExp(':(..)[^:]* (' + cc[0] + ')[^ ]*(' + cc[1] + ')', 'i'));
-	return { country: c[1], continent: c[2] + c[3] };
-}
